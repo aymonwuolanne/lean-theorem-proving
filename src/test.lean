@@ -1,3 +1,3 @@
 import data.nat.prime 
 
-#print "hello world"
+#eval 1+1
