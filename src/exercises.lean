@@ -1,5 +1,5 @@
 
--- ch2 exercises 
+-- ch2
     universe u 
 
     -- problem 1
@@ -55,12 +55,106 @@
     end matrix 
 
 
+-- ch3
+open classical 
 
+variables p q r s : Prop
 
+theorem t1 : p ∧ q ↔ q ∧ p := 
+iff.intro 
+    (assume h : p ∧ q,
+    have hp : p, from h.left,
+    have hq : q, from h.right,
+    show q ∧ p, from and.intro hq hp)
+    (assume h : q ∧ p, 
+    have hq : q, from h.left,
+    have hp : p, from h.right,
+    show p ∧ q, from and.intro hp hq)
 
+example : (p → (q → r)) ↔ (p ∧ q → r) := 
+iff.intro 
+    (assume h1 : p → (q → r),
+    show p ∧ q → r, from
+        (assume h2 : p ∧ q,
+        have hp : p, from h2.left,
+        have hq : q, from h2.right,
+        have hr : r, from h1 hp hq,
+        show r, from hr)
+    )
+    (assume h1 : p ∧ q → r,
+    show p → (q → r), from (
+        assume hp : p, 
+        show q → r, from (
+            assume hq : q,
+            have h2 : p ∧ q, from and.intro hp hq,
+            show r, from h1 h2
+        )
+    )
+    )
 
+-- using classical logic
+example : ¬(p ↔ ¬p) :=
+not.intro 
+    (assume h : p ↔ ¬p,
+    have h1 : p → ¬p, from iff.mp h,
+    have h2 : ¬p → p, from iff.mpr h,
+    show false, from or.elim (em p)
+        (assume hp : p, 
+        show false, from h1 hp hp)
+        (assume hnp : ¬p,
+        show false, from hnp (h2 hnp) )
+    )
 
-
+-- without using classical logic?
+example : ¬(p ↔ ¬p) := sorry
+-- not.intro 
+--     (assume h : p ↔ ¬p,
+--     have h1 : p → ¬p, from iff.mp h,
+--     have h2 : ¬p → p, from iff.mpr h,
     
+--     show false, from 
+--     )
 
-    
+
+
+-- tactics
+theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p := 
+begin
+apply and.intro,
+exact hp,
+apply and.intro,
+exact hq,
+exact hp
+end
+
+
+example (p q r : Prop) : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) :=
+begin 
+apply iff.intro,
+  intro h, 
+  apply or.elim (and.right h),
+    intro hq, 
+    apply or.intro_left,
+    apply and.intro,
+      exact and.left h,
+      exact hq,
+    intro hr, 
+    apply or.intro_right,
+    apply and.intro,
+      exact and.left h,
+      exact hr,
+  
+  intro h, 
+  apply or.elim h,
+    intro h₁,
+    apply and.intro,
+      exact and.left h₁,
+      apply or.intro_left, 
+      exact and.right h₁, 
+    intro h₂, 
+      apply and.intro,
+        exact and.left h₂,
+        apply or.intro_right, 
+        exact and.right h₂,
+end
+
