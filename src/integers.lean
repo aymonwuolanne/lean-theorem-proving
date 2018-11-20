@@ -68,6 +68,20 @@ begin
     apply l2
 end 
 
+theorem distributivity : ∀ (a b c : natural), a * (b + c) = a*b + a*c := 
+begin
+  intros a b c, 
+  induction c with c, 
+    refl, 
+    
+    have h₁ : b + s c = s (b + c), 
+    refl, 
+    have h₂ : a * s (b + c) = a * (b + c) + a, 
+    refl, 
+    have h₃ : a * b + a * s c = a * b + (a * c + a), 
+    refl,
+    rw [h₁, h₂, h₃, add_assoc, c_ih]
+end
 
 
 end hidden
