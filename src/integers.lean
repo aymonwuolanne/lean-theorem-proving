@@ -5,11 +5,14 @@ inductive natural : Type
 
 open natural
 
-def add (a b : natural) : natural := 
-natural.rec_on b a (λ b add_a_b, s add_a_b)
+def add : natural → natural → natural 
+| a zero  := a 
+| a (s b) := s (add a b)
 
-def mul (a b : natural) : natural := 
-natural.rec_on b zero (λ b mul_a_b, add mul_a_b a)
+
+def mul : natural → natural → natural 
+| a zero  := zero 
+| a (s b) := add (mul a b) a
 
 instance : has_add natural := has_add.mk add 
 instance : has_mul natural := has_mul.mk mul 
@@ -19,7 +22,7 @@ theorem add_assoc : ∀ (a b c : natural), a + (b + c) = (a + b) + c :=
 begin
   intros a b c, 
   induction c,
-    refl,                -- zero case 
+    refl,                
 
     have h₁ : a + (b + s c_a) = s (a + (b + c_a)), 
     refl, 
@@ -28,7 +31,7 @@ begin
     rw [h₁, h₂, c_ih]
 end
 
--- to show that adding zero on the left gives the same result
+-- adding zero on the left gives the same result
 lemma add_zero : ∀ a : natural, zero + a = a := 
 begin
   intro a,
@@ -40,8 +43,8 @@ begin
     rw [h₁, a_ih]
 end
 
-
-lemma l2 : ∀ (a b : natural), s (b + a) = (s b) + a := 
+-- a lemma that helps in proving the commutativity of addition
+lemma l₁ : ∀ (a b : natural), s (b + a) = (s b) + a := 
 begin 
   intros a b, 
   induction a with a, 
@@ -54,7 +57,7 @@ begin
     rw [h₁, h₂, a_ih]
 end
 
--- commutativity of addition
+
 theorem add_comm : ∀ (a b : natural), a + b = b + a := 
 begin 
   intros a b, 
@@ -65,8 +68,9 @@ begin
     have h₁ : a + s b = s (a + b),
     refl, 
     rw [h₁, b_ih], 
-    apply l2
+    apply l₁
 end 
+
 
 theorem distributivity : ∀ (a b c : natural), a * (b + c) = a*b + a*c := 
 begin
