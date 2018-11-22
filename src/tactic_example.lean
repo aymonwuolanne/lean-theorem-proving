@@ -38,6 +38,7 @@ do t ← target,
    apply eqs,
    skip
 
+#check expr
 -- set_option pp.all true
 
 lemma foo : 1 + 1 = 3 :=
