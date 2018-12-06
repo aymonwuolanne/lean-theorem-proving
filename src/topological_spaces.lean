@@ -8,60 +8,33 @@ import category_theory.examples.Top.products
 
 noncomputable theory
 
-def I := { x : ℝ | 0 ≤ x ∧ x ≤ 1 }
- 
-instance : topological_space I := by apply_instance
-
 open category_theory.examples
+open category_theory.limits
 open category_theory
 
-def 𝕀     : Top := { α := I }
-def s : Top := { α := punit, str := sorry } -- use the discrete topology
+local attribute [instance] has_binary_product_of_has_product
+def I := {x : ℝ | 0 ≤ x ∧ x ≤ 1} 
+def 𝕀 : Top := { α := I }
 
 def path (X : Top) := 𝕀 ⟶ X
 
+-- proving that 0 and 1 are in fact contained in I
+lemma I_contains_0 : (0 : ℝ) ∈ I := 
+⟨le_refl 0, le_of_lt zero_lt_one⟩
+lemma I_contains_1 : (1 : ℝ) ∈ I := 
+⟨le_of_lt zero_lt_one, le_refl 1⟩
+-- shorthands for 0 and 1 as elements of I
+def I_0 : I := ⟨ 0, I_contains_0 ⟩ 
+def I_1 : I := ⟨ 1, I_contains_1 ⟩
 
--- defining S¹
-def S1 := { x : ℝ × ℝ | norm x = 1}
+-- loops are defined as paths that have the same endpoints
+def loop (X : Top) := subtype (λ (γ : path X), γ.val I_0 = γ.val I_1)
 
--- S¹ as a category
-def 𝕊1 : Top := { α := S1 }
 
--- loops are defined as continuous maps from S1 to the space X
-inductive loop (X : Top) : Type := 𝕊1 ⟶ X
+def homotopy {X Y : Top} (f g : X ⟶ Y) := {F : limits.prod X 𝕀 ⟶ Y // true }
 
-def prd (X Y : Top) : Top := 
-limits.pi (limits.two.map X Y)
-
--- def homotopy {X Y : Top} (f g : X ⟶ Y) := {F : limits.prod X 𝕀 ⟶ Y // true }
--- set_option trace.class_instances true
-def right_unitor (X : Top) : X ⟶ prd X s :=
-{ val := λ x, begin intros, cases b, exact x, exact punit.star end,
-  property := begin end
-}
-
-def prd' (X Y : Top) : Top :=
-{ α := X.α × Y.α }
-
-def right_unitor' (X : Top) : X ⟶ prd' X s :=
-{ val := λ x, (x, punit.star),
-  property := begin end } 
-  -- this should just be because the topology on the product is by definitoin
-  -- the topology so that pairs of continuous maps constitute a continuous map to the product!
+def constant_0 (X : Top) := λ (x : X.α), 0 
+def constant_1 (X : Top) := λ (x : X.α), 1
 
 
 
--- example instantiating ℕ with the discrete topology from basics
-open set
-
--- define every subset of ℕ to be open
-def nat_isopen : set ℕ → Prop := (λ (S : set ℕ), true)
--- prove the relevant properties of a topological space 
-def nat_isopen_univ : nat_isopen univ := trivial
-def nat_isopen_inter : ∀ s t, nat_isopen s → nat_isopen t → nat_isopen (s ∩ t) := 
-λ s t, (λ hs ht, trivial)
-def nat_isopen_sUnion : ∀ s, (∀ t ∈ s, nat_isopen t) → nat_isopen (⋃₀ s) := 
-λ s, (λ h, trivial)
-
-instance nat_top  : topological_space ℕ := 
-⟨ nat_isopen, nat_isopen_univ, nat_isopen_inter, nat_isopen_sUnion ⟩
