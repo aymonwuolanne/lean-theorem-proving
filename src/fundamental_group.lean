@@ -1,7 +1,6 @@
 import analysis.topology.continuity
 import category_theory.examples.topological_spaces
 import analysis.real
-import analysis.normed_space
 import category_theory.limits.binary_products
 import category_theory.examples.Top.products
 
@@ -41,7 +40,7 @@ def homotopy {X Y : Top} (f g : X ⟶ Y) (F : limits.prod X 𝕀 ⟶ Y) : Prop :
  prod.lift (𝟙 X) (const_hom I_1) ≫ F = g 
  
 
-def loop_homotopy {X : Top} (f g : {γ : path X // loop γ}) (F : limits.prod 𝕀 𝕀 ⟶ X) : Prop :=  
+def loop_homotopy {X : Top} (f g : subtype loop) (F : limits.prod 𝕀 𝕀 ⟶ X) : Prop :=  
 homotopy f.val g.val F 
 ∧ 
 ∀ a : I, loop (prod.lift (𝟙 𝕀) (const_hom I_0) ≫ F) 
