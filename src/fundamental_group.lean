@@ -27,9 +27,11 @@ def I_0 : I := ⟨ 0, I_contains_0 ⟩
 def I_1 : I := ⟨ 1, I_contains_1 ⟩
 
 -- loops are paths that have the same endpoints
-def loop {X : Top} (γ : path X) : Prop := γ.val I_0 = γ.val I_1 
+def is_loop {X : Top} (γ : path X) := γ.val I_0 = γ.val I_1 
+def loop (X : Top) := subtype (@is_loop X)
 
--- defining the constant map to a space
+
+-- defining the constant map to the interval
 def const_hom {X : Top} (a : I) : (X ⟶ 𝕀) := {val := (λ x, a), property := continuous_const}
 
 
@@ -40,10 +42,29 @@ def homotopy {X Y : Top} (f g : X ⟶ Y) (F : limits.prod X 𝕀 ⟶ Y) : Prop :
  prod.lift (𝟙 X) (const_hom I_1) ≫ F = g 
  
 
-def loop_homotopy {X : Top} (f g : subtype loop) (F : limits.prod 𝕀 𝕀 ⟶ X) : Prop :=  
+def loop_homotopy {X : Top} (f g : loop X) (F : limits.prod 𝕀 𝕀 ⟶ X) : Prop :=  
 homotopy f.val g.val F 
 ∧ 
-∀ a : I, loop (prod.lift (𝟙 𝕀) (const_hom I_0) ≫ F) 
+∀ a : I, is_loop (prod.lift (𝟙 𝕀) (const_hom a) ≫ F) 
 
 
+def homotopic {X : Top} (f g : loop X) : Prop := ∃ (F : limits.prod 𝕀 𝕀 ⟶ X), loop_homotopy f g F 
 
+--       fst   f
+-- 𝕀 × 𝕀  ⟶ 𝕀 ⟶ X 
+def id_htpy {X : Top} (f : 𝕀 ⟶ X) : limits.prod 𝕀 𝕀 ⟶ X := limits.prod.fst 𝕀 𝕀 ≫ f
+lemma id_htpy_is_htpy {X : Top} (f : path X): homotopy f f (id_htpy f) := 
+by obviously
+
+-- we want to show that 'homotopic' is an equivalence relation
+theorem homotopic_refl : ∀ {X : Top} (f : loop X), homotopic f f := 
+begin 
+  intros, 
+  have h₁ : loop_homotopy f f (id_htpy f.val), 
+  from sorry,
+  exact exists.intro (id_htpy f.val) h₁,
+end
+
+theorem homotopic_symm : ∀ {X : Top} (f g : loop X), homotopic f g → homotopic g f := sorry 
+
+theorem homotopic_tran : ∀ {X : Top} (f g h : loop X), homotopic f g → homotopic g h → homotopic f h := sorry  
