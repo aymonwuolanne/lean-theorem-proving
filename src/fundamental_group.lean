@@ -26,9 +26,17 @@ lemma I_contains_1 : (1 : ℝ) ∈ I :=
 def I_0 : I := ⟨ 0, I_contains_0 ⟩ 
 def I_1 : I := ⟨ 1, I_contains_1 ⟩
 
+
+-- TODO define `path x y`, define `loop_at x = path x x`, and `free_loop = Σ x, loop_at x`
+-- TODO? Define the path category
+-- def paths (X : Top) := X.α
+-- instance category (paths X) :=
+-- { hom := λ x y, path x y }
+-- If `C` is a category, `x : C`, `Aut x` is a group.
+
 -- loops are paths that have the same endpoints
 def is_loop {X : Top} (γ : path X) := γ.val I_0 = γ.val I_1 
-def loop (X : Top) := subtype (@is_loop X)
+def loop (X : Top) := subtype (@is_loop X) -- TODO custom structure
 
 
 -- defining the constant map to the interval
@@ -62,16 +70,18 @@ def id_htpy {X : Top} (f : 𝕀 ⟶ X) : limits.prod 𝕀 𝕀 ⟶ X := limits.p
 -- end
 -- #print id_htpy_is_htpy
 
-
+namespace homotopic
 -- we want to show that 'homotopic' is an equivalence relation
-theorem homotopic_refl : ∀ {X : Top} (f : loop X), homotopic f f := 
-begin 
-  intros, 
-  have h₁ : loop_homotopy f f (id_htpy f.val), 
-  by obviously,
-  exact exists.intro (id_htpy f.val) h₁,
-end
+@[refl] theorem refl {X : Top} (f : loop X) : homotopic f f := 
+⟨ id_htpy f.val, by tidy ⟩ 
 
-theorem homotopic_symm : ∀ {X : Top} (f g : loop X), homotopic f g → homotopic g f := sorry 
+-- begin 
+--   use id_htpy f.val,
+--   -- show loop_homotopy f f (id_htpy f.val),
+--   tidy {trace_result := tt},
+-- end
 
-theorem homotopic_tran : ∀ {X : Top} (f g h : loop X), homotopic f g → homotopic g h → homotopic f h := sorry  
+@[symm] theorem symm : ∀ {X : Top} (f g : loop X), homotopic f g → homotopic g f := sorry 
+
+@[trans] theorem trans : ∀ {X : Top} (f g h : loop X), homotopic f g → homotopic g h → homotopic f h := sorry  
+end homotopic
