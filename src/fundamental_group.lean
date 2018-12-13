@@ -53,15 +53,22 @@ def homotopic {X : Top} (f g : loop X) : Prop := ∃ (F : limits.prod 𝕀 𝕀 
 --       fst   f
 -- 𝕀 × 𝕀  ⟶ 𝕀 ⟶ X 
 def id_htpy {X : Top} (f : 𝕀 ⟶ X) : limits.prod 𝕀 𝕀 ⟶ X := limits.prod.fst 𝕀 𝕀 ≫ f
-lemma id_htpy_is_htpy {X : Top} (f : path X): homotopy f f (id_htpy f) := 
-by obviously
+
+-- lemma id_htpy_is_htpy {X : Top} (f : path X): homotopy f f (id_htpy f) := 
+-- begin
+--   apply and.intro, 
+--   rw [id_htpy, ←category.assoc, limits.prod.lift_fst, category.id_comp],
+--   rw [id_htpy, ←category.assoc, limits.prod.lift_fst, category.id_comp]
+-- end
+-- #print id_htpy_is_htpy
+
 
 -- we want to show that 'homotopic' is an equivalence relation
 theorem homotopic_refl : ∀ {X : Top} (f : loop X), homotopic f f := 
 begin 
   intros, 
   have h₁ : loop_homotopy f f (id_htpy f.val), 
-  from sorry,
+  by obviously,
   exact exists.intro (id_htpy f.val) h₁,
 end
 
