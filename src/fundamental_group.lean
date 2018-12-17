@@ -15,8 +15,6 @@ local attribute [instance] has_binary_product_of_has_product
 def I := {x : ℝ | 0 ≤ x ∧ x ≤ 1} 
 def 𝕀 : Top := { α := I }
 
-def path (X : Top) := 𝕀 ⟶ X
-
 -- proofs that 0 and 1 are contained in I
 lemma I_contains_0 : (0 : ℝ) ∈ I := 
 ⟨le_refl 0, le_of_lt zero_lt_one⟩
@@ -34,54 +32,52 @@ def I_1 : I := ⟨ 1, I_contains_1 ⟩
 -- { hom := λ x y, path x y }
 -- If `C` is a category, `x : C`, `Aut x` is a group.
 
--- loops are paths that have the same endpoints
-def is_loop {X : Top} (γ : path X) := γ.val I_0 = γ.val I_1 
-def loop (X : Top) := subtype (@is_loop X) -- TODO custom structure
+structure path {X : Top} (x y : X.α) := 
+(map : 𝕀 ⟶ X) (cont : continuous map) (property : map.val I_0 = x ∧ map.val I_1 = y) 
 
+def loop_at {X : Top} (x : X.α) := path x x
 
--- defining the constant map to the interval
-def const_hom {X : Top} (a : I) : (X ⟶ 𝕀) := {val := (λ x, a), property := continuous_const}
+def const_map (X Y : Top) (y : Y.α) : X ⟶ Y := {val := (λ x, y), property := continuous_const}
+
+def loop_composition {X : Top} {x y z : X.α} (f : path x y) (g : path y z) : path x z := sorry 
+
+def paths (X : Top) := X.α 
+instance {X : Top} : category (paths X) := { 
+    hom := λ x y, path x y, 
+    id := λ x, { map := const_map 𝕀 X x, cont := continuous_const, property := by tidy}, 
+    comp := @loop_composition X } 
+
+def fundamental_group (X : Top) (x : paths X) := category_theory.Aut x
+
 
 
 -- intuitively says that F(x,0) = f(x) and F(x,1) = g(x) for all x ∈ X. 
 def homotopy {X Y : Top} (f g : X ⟶ Y) (F : limits.prod X 𝕀 ⟶ Y) : Prop :=  
- prod.lift (𝟙 X) (const_hom I_0) ≫ F = f 
+ prod.lift (𝟙 X) (const_map X 𝕀 I_0) ≫ F = f 
  ∧ 
- prod.lift (𝟙 X) (const_hom I_1) ≫ F = g 
+ prod.lift (𝟙 X) (const_map X 𝕀 I_1) ≫ F = g 
  
 
-def loop_homotopy {X : Top} (f g : loop X) (F : limits.prod 𝕀 𝕀 ⟶ X) : Prop :=  
-homotopy f.val g.val F 
+def loop_homotopy {X : Top} {x : X.α} (f g : loop_at x) (F : limits.prod 𝕀 𝕀 ⟶ X) : Prop :=  
+homotopy f.map g.map F 
 ∧ 
-∀ a : I, is_loop (prod.lift (𝟙 𝕀) (const_hom a) ≫ F) 
+∀ a : I, (prod.lift (𝟙 𝕀) (const_map 𝕀 𝕀 a) ≫ F)
 
 
-def homotopic {X : Top} (f g : loop X) : Prop := ∃ (F : limits.prod 𝕀 𝕀 ⟶ X), loop_homotopy f g F 
+def homotopic {X : Top} {x : X.α} (f g : loop_at x) : Prop := ∃ (F : limits.prod 𝕀 𝕀 ⟶ X), loop_homotopy f g F 
 
---       fst   f
--- 𝕀 × 𝕀  ⟶ 𝕀 ⟶ X 
+-- given a map f this returns the homotopy from f to itself
 def id_htpy {X : Top} (f : 𝕀 ⟶ X) : limits.prod 𝕀 𝕀 ⟶ X := limits.prod.fst 𝕀 𝕀 ≫ f
-
--- lemma id_htpy_is_htpy {X : Top} (f : path X): homotopy f f (id_htpy f) := 
--- begin
---   apply and.intro, 
---   rw [id_htpy, ←category.assoc, limits.prod.lift_fst, category.id_comp],
---   rw [id_htpy, ←category.assoc, limits.prod.lift_fst, category.id_comp]
--- end
--- #print id_htpy_is_htpy
 
 namespace homotopic
 -- we want to show that 'homotopic' is an equivalence relation
-@[refl] theorem refl {X : Top} (f : loop X) : homotopic f f := 
-⟨ id_htpy f.val, by tidy ⟩ 
+@[refl] theorem refl {X : Top} {x : X.α} (f : loop_at x) : homotopic f f := 
+⟨ id_htpy f.map, sorry ⟩ 
 
--- begin 
---   use id_htpy f.val,
---   -- show loop_homotopy f f (id_htpy f.val),
---   tidy {trace_result := tt},
--- end
+@[symm] theorem symm {X : Top} {x : X.α} (f g : loop_at x) :homotopic f g → homotopic g f := sorry 
 
-@[symm] theorem symm : ∀ {X : Top} (f g : loop X), homotopic f g → homotopic g f := sorry 
+@[trans] theorem trans {X : Top} {x : X.α} (f g h : loop_at x) : homotopic f g → homotopic g h → homotopic f h := 
+sorry  
 
-@[trans] theorem trans : ∀ {X : Top} (f g h : loop X), homotopic f g → homotopic g h → homotopic f h := sorry  
 end homotopic
+
