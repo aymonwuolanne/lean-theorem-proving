@@ -26,16 +26,19 @@ def I_1 : I := ⟨ 1, I_contains_1 ⟩
 
 
 -- says that the path has initial point x and final point y
-def path_prop {X : Top} (x y : X.α) (map : 𝕀 ⟶ X) := map.val I_0 = x ∧ map.val I_1 = y
+def path_prop {X : Top} (x y : X.α) (map : 𝕀 ⟶ X) : Prop := map.val I_0 = x ∧ map.val I_1 = y
 
 -- I understand it is strange to separate the definition of path_prop from this definition
 -- but Lean wouldn't accept that map.val made sense otherwise
 structure path {X : Top} (x y : X.α) := 
-(map : 𝕀 ⟶ X) (property : path_prop x y map)
+(map : 𝕀 ⟶ X)
+(property : path_prop x y map)
 
 def loop_at {X : Top} (x : X.α) := path x x
 
-def const_map (X Y : Top) (y : Y.α) : X ⟶ Y := {val := (λ x, y), property := continuous_const}
+def const_map (X Y : Top) (y : Y.α) : X ⟶ Y := 
+{ val := (λ x, y), 
+  property := continuous_const }
 
 def loop_composition {X : Top} {x y z : X.α} (f : path x y) (g : path y z) : path x z := sorry 
 
@@ -46,16 +49,13 @@ instance {X : Top} : category (paths X) := sorry
 
 -- intuitively says that F(x,0) = f(x) and F(x,1) = g(x) for all x ∈ X. 
 def homotopy {X Y : Top} (f g : X ⟶ Y) (F : limits.prod X 𝕀 ⟶ Y) : Prop :=  
- prod.lift (𝟙 X) (const_map X 𝕀 I_0) ≫ F = f 
- ∧ 
- prod.lift (𝟙 X) (const_map X 𝕀 I_1) ≫ F = g 
+prod.lift (𝟙 X) (const_map X 𝕀 I_0) ≫ F = f ∧ 
+prod.lift (𝟙 X) (const_map X 𝕀 I_1) ≫ F = g 
  
 -- this is a homotopy with the added restriction that for a fixed value of t, F(x,t) is also a loop at x.
 def loop_homotopy {X : Top} {x : X.α} (f g : loop_at x) (F : limits.prod 𝕀 𝕀 ⟶ X) : Prop :=  
-homotopy f.map g.map F 
-∧ 
+homotopy f.map g.map F ∧ 
 ∀ t : I, path_prop x x (prod.lift (𝟙 𝕀) (const_map 𝕀 𝕀 t) ≫ F)
-
 
 def homotopic {X : Top} {x : X.α} (f g : loop_at x) : Prop := ∃ (F : limits.prod 𝕀 𝕀 ⟶ X), loop_homotopy f g F 
 
@@ -67,20 +67,16 @@ namespace homotopic
 -- we want to show that 'homotopic' is an equivalence relation
 @[refl] theorem refl {X : Top} {x : X.α} (f : loop_at x) : homotopic f f := 
 ⟨ id_htpy f.map, 
-begin 
-  apply and.intro, 
-    apply and.intro, 
-      rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp],
-      rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp],
-    
-    intros, 
-    apply and.intro, 
-      rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp],
-      exact and.left f.property,
-      
-      rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp],
-      exact and.right f.property,
-end ⟩ 
+  ⟨ ⟨ by rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp],
+      by rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp] ⟩,
+    λ t, ⟨ begin 
+             rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp],
+             exact and.left f.property,
+           end,
+           begin
+            rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp],
+            exact and.right f.property,
+           end ⟩ ⟩ ⟩
 
 @[symm] theorem symm {X : Top} {x : X.α} (f g : loop_at x) :homotopic f g → homotopic g f := sorry 
 
