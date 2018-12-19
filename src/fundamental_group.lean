@@ -60,23 +60,16 @@ homotopy f.map g.map F ∧
 def homotopic {X : Top} {x : X.α} (f g : loop_at x) : Prop := ∃ (F : limits.prod 𝕀 𝕀 ⟶ X), loop_homotopy f g F 
 
 -- given a map f this returns the homotopy from f to itself
-def id_htpy {X : Top} (f : 𝕀 ⟶ X) : limits.prod 𝕀 𝕀 ⟶ X := limits.prod.fst 𝕀 𝕀 ≫ f
+@[simp] def id_htpy {X : Top} (f : 𝕀 ⟶ X) : limits.prod 𝕀 𝕀 ⟶ X := limits.prod.fst 𝕀 𝕀 ≫ f
 
 namespace homotopic
 
 -- we want to show that 'homotopic' is an equivalence relation
 @[refl] theorem refl {X : Top} {x : X.α} (f : loop_at x) : homotopic f f := 
 ⟨ id_htpy f.map, 
-  ⟨ ⟨ by rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp],
-      by rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp] ⟩,
-    λ t, ⟨ begin 
-             rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp],
-             exact and.left f.property,
-           end,
-           begin
-            rw [id_htpy, ←category.assoc, prod.lift_fst, category.id_comp],
-            exact and.right f.property,
-           end ⟩ ⟩ ⟩
+  ⟨ ⟨ begin dsimp, rw [←category.assoc], simp, end,
+      begin dsimp, rw [←category.assoc], simp, end ⟩,
+    λ t, f.property ⟩ ⟩
 
 @[symm] theorem symm {X : Top} {x : X.α} (f g : loop_at x) :homotopic f g → homotopic g f := sorry 
 
