@@ -13,17 +13,19 @@ open category_theory
 
 local attribute [instance] has_binary_product_of_has_product
 def I := {x : ℝ | 0 ≤ x ∧ x ≤ 1} 
-def 𝕀 : Top := { α := I }
+def 𝕀 : Top := { α := I, str := by apply_instance}
 
--- proofs that 0 and 1 are contained in I
+-- proofs that 0, 1 and 1/2 are contained in I
 lemma I_contains_0 : (0 : ℝ) ∈ I := 
 ⟨le_refl 0, le_of_lt zero_lt_one⟩
 lemma I_contains_1 : (1 : ℝ) ∈ I := 
 ⟨le_of_lt zero_lt_one, le_refl 1⟩
--- shorthands for 0 and 1 as elements of I
+lemma I_contains_half : (1/2 : ℝ) ∈ I := 
+⟨ le_of_lt one_half_pos, le_of_lt one_half_lt_one ⟩
+-- shorthands for 0, 1 and 1/2 as elements of I
 def I_0 : I := ⟨ 0, I_contains_0 ⟩ 
 def I_1 : I := ⟨ 1, I_contains_1 ⟩
-
+def I_half : I := ⟨ 1/2, I_contains_half ⟩
 
 -- says that the path has initial point x and final point y
 def path_prop {X : Top} (x y : X.α) (map : 𝕀 ⟶ X) : Prop := map.val I_0 = x ∧ map.val I_1 = y
@@ -40,12 +42,12 @@ def const_map (X Y : Top) (y : Y.α) : X ⟶ Y :=
 { val := (λ x, y), 
   property := continuous_const }
 
-def loop_composition {X : Top} {x y z : X.α} (f : path x y) (g : path y z) : path x z := sorry 
+def loop_composition {X : Type} [topological_space X] (f : I → X) (g : I → X) : I → X := 
+λ x, if x.val ≤ 1/2 then f ⟨ 2 * x.val, ⟨ sorry, sorry ⟩⟩ else g ⟨2 * x.val - 1, sorry ⟩
 
 def paths (X : Top) := X.α 
 
 instance {X : Top} : category (paths X) := sorry 
-
 
 -- intuitively says that F(x,0) = f(x) and F(x,1) = g(x) for all x ∈ X. 
 def homotopy {X Y : Top} (f g : X ⟶ Y) (F : limits.prod X 𝕀 ⟶ Y) : Prop :=  
