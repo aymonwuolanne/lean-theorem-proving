@@ -1,7 +1,6 @@
 import category_theory.examples.topological_spaces
 import category_theory.limits.pullbacks
 import category_theory.const 
-
 import analysis.topology.continuity
 
 open category_theory.examples 
@@ -27,7 +26,7 @@ def r (x : sum Y.α Z.α) (y : sum Y.α Z.α) : Prop :=
 x = y ∨ 
 ∃ a : X.α, inl (f.val a) = x ∧ inr (g.val a) = y
 
-def P : Top := { α := quot (r f g)}
+def P : Top := { α := quot (r f g), str := by apply_instance}
 
 -- inclusion maps from Y and Z into the pushout P
 def i_Y : Y ⟶ P f g := { val := quot.mk (r f g) ∘ inl, 
