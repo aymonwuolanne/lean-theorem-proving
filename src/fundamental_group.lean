@@ -34,6 +34,8 @@ def I_0    : I := ⟨ 0, I_contains_0 ⟩
 def I_1    : I := ⟨ 1, I_contains_1 ⟩
 def I_half : I := ⟨ 2⁻¹, I_contains_half ⟩
 
+@[simp] lemma I_0_val : I_0.val = 0 := rfl
+
 -- says that the path has initial point x and final point y
 def path_prop {X : Top} (x y : X.α) (map : 𝕀 ⟶ X) : Prop := map.val I_0 = x ∧ map.val I_1 = y
 
@@ -178,10 +180,12 @@ end I_lemmas
 open I_lemmas
 
 -- the composition of two paths in X
-def path_comp_map {X : Top} (f g : I → X.α) : I → X.α := 
-  λ x, dite (x.val ≤ 2⁻¹)
-    (f ∘ (i₁_inv x))
-    (g ∘ (i₂_inv x) ∘ le_of_lt ∘ lt_of_not_ge)
+def path_comp_map {X : Top} (f g : I → X.α) (x : I) : X.α := 
+if h : x.val ≤ 2⁻¹ then
+  f (i₁_inv x h)
+else
+  let h' := le_of_lt (lt_of_not_ge h) in
+  g (i₂_inv x h')
 
 def val : I → ℝ := subtype.val 
 
@@ -217,7 +221,9 @@ funext $ λ x,
   have h₂ : f (i₁_inv (i₁ x) (half_x_le_half x)) = f x,
     from congr_arg f (inv_comp₁ x),
   trans h₁ h₂
-  
+
+lemma foo {x : I} (heq : I_half = i₂ x) : x = I_0 := sorry
+
 lemma commutes_2 {X : Top} (f g : I → X.α) (h : f I_1 = g I_0) : path_comp_map f g ∘ i₂ = g := 
 funext $ λ x,
   have h₁ : i₂ x ≥ I_half,
@@ -226,21 +232,21 @@ funext $ λ x,
     ( λ heq,
     have heq₁ : i₂ x ≤ I_half, 
       from le_of_eq (symm heq),
-    have heq₅ : x = I_0,  
-      from subtype.eq $ 
-        have h₁ : 1 = x.val + 1, 
-          from calc 
-            (1:ℝ) = 2 * 2⁻¹                   : symm (mul_inv_cancel (ne_of_gt two_pos))
-            ...   = 2 * (2⁻¹ * (x.val + 1))   : congr_arg (has_mul.mul 2) (subtype.ext.mp heq)
-            ...   = (2 * 2⁻¹) * (x.val + 1)   : symm (mul_assoc 2 (2⁻¹) (x.val + 1))
-            ...   = 1 * (x.val + 1)           : by rw [mul_inv_cancel (ne_of_gt two_pos)]
-            ...   = x.val + 1                 : one_mul (x.val + 1),
-        calc 
-          x.val = x.val + 0       : symm (add_zero x.val)
-          ...   = x.val + (1 - 1) : by rw [sub_self] 
-          ...   = x.val + 1 - 1   : symm (add_assoc x.val 1 (-1))
-          ...   = 1 - 1           : by rw [←h₁]
-          ...   = 0               : sub_self 1,
+    have heq₅ : x = I_0 := foo heq,  
+      -- from subtype.eq $ 
+      --   have h₁ : 1 = x.val + 1, begin rw [foo heq], simp, end,
+      --     -- from calc 
+      --     --   (1:ℝ) = 2 * 2⁻¹                   : symm (mul_inv_cancel (ne_of_gt two_pos))
+      --     --   ...   = 2 * (2⁻¹ * (x.val + 1))   : congr_arg (has_mul.mul 2) (subtype.ext.mp heq)
+      --     --   ...   = (2 * 2⁻¹) * (x.val + 1)   : symm (mul_assoc 2 (2⁻¹) (x.val + 1))
+      --     --   ...   = 1 * (x.val + 1)           : by rw [mul_inv_cancel (ne_of_gt two_pos)]
+      --     --   ...   = x.val + 1                 : one_mul (x.val + 1),
+      --   calc 
+      --     x.val = x.val + 0       : symm (add_zero x.val)
+      --     ...   = x.val + (1 - 1) : by rw [sub_self] 
+      --     ...   = x.val + 1 - 1   : symm (add_assoc x.val 1 (-1))
+      --     ...   = 1 - 1           : by rw [←h₁]
+      --     ...   = 0               : sub_self 1,
     have heq₂ : (path_comp_map f g ∘ i₂) x = f (i₁_inv (i₂ x) heq₁),
       from dif_pos heq₁,
     begin
