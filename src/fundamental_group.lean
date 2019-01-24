@@ -183,33 +183,32 @@ def path_comp_map {X : Top} (f g : I → X.α) : I → X.α :=
     (f ∘ (i₁_inv x))
     (g ∘ (i₂_inv x) ∘ le_of_lt ∘ lt_of_not_ge)
 
+def val : I → ℝ := subtype.val 
+
+def double : ℝ → ℝ := λ x, 2 * x 
+
+lemma cont1 : continuous double := continuous_mul continuous_const continuous_id
+
+def double_sub_one : ℝ → ℝ := λ x, 2*x - 1
+
+lemma cont2 : continuous double_sub_one := continuous_sub cont1 continuous_const
+
 lemma I_self_pushout : ∀ {s : set I}, is_open (i₁ ⁻¹' s) → is_open (i₂ ⁻¹' s) → is_open s :=  
-  -- outline :
-  -- use is_open_metric and prove the metric space definition
-  -- split into the cases x < 2⁻¹, x = 2⁻¹, and x > 2⁻¹
-  λ s hs1 hs2, is_open_metric.mpr (
-    λ x hx,
-    have h₁ : (x < I_half) ∨ (x = I_half) ∨ (x > I_half), 
-      from lt_trichotomy x I_half,
-    have hlt : x < I_half → ∃ ε > 0, ball x ε ⊆ s, 
-      from λ hlt, 
-        let x' : I := i₁_inv x (le_of_lt hlt) in  
-          have hlt₁ : x = i₁ x', 
-            from sorry, 
-          have hlt₂ : i₁ x' ∈ s, 
-            from hlt₁ ▸ hx, 
-          have hx' : x' ∈ i₁ ⁻¹' s, 
-            from hlt₂,
-          have h₄ : ∃ ε > 0, ball x' ε ⊆ i₁ ⁻¹' s,
-            from is_open_metric.mp hs1 x' hx', 
-          sorry,
-    have heq : x = I_half → ∃ ε > 0, ball x ε ⊆ s, 
-      from sorry,
-    have hgt : x > I_half → ∃ ε > 0, ball x ε ⊆ s,
-      from sorry, 
-    
-    or.elim h₁ hlt (λ h, or.elim h heq hgt)
-  )
+  λ s hs1 hs2,
+  have h₁ : ∃ t₁, is_open t₁ ∧ i₁ ⁻¹' s = val ⁻¹' t₁,
+    from is_open_induced_iff.mp hs1,
+  have h₂ : ∃ t₂, is_open t₂ ∧ i₂ ⁻¹' s = val ⁻¹' t₂,
+    from is_open_induced_iff.mp hs2, 
+  is_open_induced_iff.mpr $
+    exists.elim h₁ $ λ t₁ ht₁, exists.elim h₂ $ λ t₂ ht₂,
+      let t := (double ⁻¹' t₁) ∪ (double_sub_one ⁻¹' t₂) in
+      ⟨t,
+      have hopen : is_open t,
+        from is_open_union (cont1 t₁ ht₁.left) (cont2 t₂ ht₂.left), 
+      have heq : s = val ⁻¹' t,
+        from sorry,
+      ⟨hopen, heq⟩
+      ⟩
 
 lemma commutes_1 {X : Top} (f g : I → X.α) (h : f I_1 = g I_0) : path_comp_map f g ∘ i₁ = f := 
 funext $ λ x, 
@@ -219,7 +218,6 @@ funext $ λ x,
     from congr_arg f (inv_comp₁ x),
   trans h₁ h₂
   
-
 lemma commutes_2 {X : Top} (f g : I → X.α) (h : f I_1 = g I_0) : path_comp_map f g ∘ i₂ = g := 
 funext $ λ x,
   have h₁ : i₂ x ≥ I_half,
