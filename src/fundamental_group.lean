@@ -210,7 +210,7 @@ lemma I_self_pushout : ∀ {s : set I}, is_open (i₁ ⁻¹' s) → is_open (i�
       have hopen : is_open t,
         from is_open_union (cont1 t₁ ht₁.left) (cont2 t₂ ht₂.left), 
       have heq : s = val ⁻¹' t,
-        from sorry,
+        from sorry, 
       ⟨hopen, heq⟩
       ⟩
 
