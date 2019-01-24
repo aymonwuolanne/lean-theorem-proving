@@ -301,7 +301,7 @@ def path_composition {X : Top} {x y z : paths X} (f : path x y) (g : path y z) :
       }, 
   property := sorry
 } 
-
+ 
 -- [f][g] = [fg]
 def composition {X : Top} {x y z : paths X} (f : path x y) : htpy_class y z → htpy_class x z := 
   quot.lift 
