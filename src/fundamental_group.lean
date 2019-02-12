@@ -19,6 +19,9 @@ local attribute [instance] has_binary_product_of_has_product
 @[reducible] def I := {x : ℝ // 0 ≤ x ∧ x ≤ 1}
 def 𝕀 : Top := { α := I, str := by apply_instance}
 
+-- Suggestion from Scott : many of these lemmas are never going to be used twice (e.g. I_contains_0, etc)
+-- You can decide whether it helps or hinders readability, but you might consider just inlining them.
+
 -- proofs that 0, 1 and 2⁻¹ are contained in I
 lemma I_contains_0 : 0 ≤ (0 : ℝ) ∧ (0 : ℝ) ≤ 1 :=
   ⟨le_refl 0, le_of_lt zero_lt_one⟩
@@ -161,6 +164,10 @@ lemma cont_second_half : continuous second_half :=
 
 def path_comp_map {X : Top} (f g : I → X.α) : I → X.α := pw (f ∘ first_half) (g ∘ second_half)
 
+-- Question from Scott: these lemmas are pretty weird. Can't you just remove the
+-- hypothesis `h`, and prove `double 2⁻¹ = 1`?
+
+-- Scott from Scott: `by X; Y` is fine for one-liners. Otherwise, use `begin ... end`
 lemma computation1 {x : I} (h : x.val = 2⁻¹) : double x.val = 1 := by rw [h]; exact mul_inv_cancel (ne_of_gt two_pos)
 
 lemma computation2 {x : I} (h : x.val = 2⁻¹) : double_sub_one x.val = 0 := by rw [h]; exact
@@ -169,6 +176,8 @@ lemma computation2 {x : I} (h : x.val = 2⁻¹) : double_sub_one x.val = 0 := by
     (2 : ℝ) * 2⁻¹ - 1 = 1 - 1  : by rw [h]
     ...               = 0      : sub_self 1
 
+
+-- Formatting suggestion from Scott: put `begin` on a new-line, no indenting
 theorem path_comp_continuous {X : Top} (f g : I → X.α) (hf : continuous f) (hg : continuous g)
   (h : f I_1 = g I_0) : continuous (path_comp_map f g) := begin
     have hp : ∀ x hx,
