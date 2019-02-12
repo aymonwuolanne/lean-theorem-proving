@@ -12,6 +12,7 @@ noncomputable theory
 open category_theory.examples
 open category_theory.limits
 open category_theory
+open set
 
 local attribute [instance] has_binary_product_of_has_product
 
@@ -80,8 +81,7 @@ sorry
 
 end homotopic
 
-
-namespace I_lemmas
+namespace path_comp
 
 lemma in_I_of_le_half (x : I) (h : x.val ≤ 2⁻¹) : 0 ≤ 2 * x.val ∧ 2 * x.val ≤ 1 := 
   ⟨ zero_le_mul (le_of_lt two_pos) (x.property.left), 
@@ -108,87 +108,6 @@ lemma in_I_of_ge_half (x : I) (h : x.val ≥ 2⁻¹) :
       ...           = 1           : add_zero 1
   ⟩  
 
-lemma half_x_in_I (x : I) : 0 ≤ 2⁻¹ * x.val ∧ 2⁻¹ * x.val ≤ 1 := ⟨
-  calc
-    2⁻¹ * x.val ≥ 2⁻¹ * 0  : mul_le_mul_of_nonneg_left x.property.left two_inv_pos
-    ...           = 0      : mul_zero 2⁻¹,
-  calc 
-    2⁻¹ * x.val ≤ 2⁻¹ * 1  : mul_le_mul_of_nonneg_left x.property.right two_inv_pos
-    ...         = 2⁻¹      : mul_one 2⁻¹
-    ...         ≤ 1        : two_inv_le_one
-  ⟩ 
-
-  lemma half_x_add_one_in_I (x : I) : 0 ≤ 2⁻¹ * (x.val + 1) ∧ 2⁻¹ * (x.val + 1) ≤ 1 := ⟨
-  calc 
-    2⁻¹ * (x.val + 1) = 2⁻¹*x.val + 2⁻¹*1    : left_distrib 2⁻¹ x.val 1
-    ...                 = 2⁻¹ * x.val + 2⁻¹  : by rw [mul_one]
-    ...                 ≥ 2⁻¹ * x.val + 0    : add_le_add_left two_inv_pos (2⁻¹ * x.val)
-    ...                 = 2⁻¹ * x.val        : add_zero (2⁻¹ * x.val)
-    ...                 ≥ 2⁻¹ * 0            : mul_le_mul_of_nonneg_left x.property.left two_inv_pos
-    ...                 = 0                  : mul_zero 2⁻¹,
-  have h₁ : x.val + 1 ≤ 1 + 1, 
-    from add_le_add_right' x.property.right, 
-  calc 
-    2⁻¹ * (x.val + 1) ≤ 2⁻¹ * (1 + 1) : mul_le_mul_of_nonneg_left h₁ two_inv_pos
-    ...               = 1             : inv_mul_cancel (ne_of_gt two_pos) 
- ⟩
-
-lemma half_x_le_half (x : I) : 2⁻¹ * x.val ≤ 2⁻¹ := 
-  calc 
-    2⁻¹ * x.val ≤ (2⁻¹) * 1  : mul_le_mul_of_nonneg_left x.property.right two_inv_pos
-    ...         = (2⁻¹)      : mul_one (2⁻¹)
-
-lemma half_x_add_one_ge_half (x : I) : 2⁻¹ ≤ (2⁻¹) * (x.val + 1) := 
-  have h₁ : 1 ≤ x.val + 1,
-  from 
-    calc
-      x.val + 1 ≥ 0 + 1  : add_le_add_right' x.property.left 
-      ...       = 1      : zero_add 1,
-  calc 
-    (2⁻¹) * (x.val + 1) ≥ (2⁻¹) * 1  : mul_le_mul_of_nonneg_left h₁ two_inv_pos
-    ...                 = 2⁻¹        : mul_one (2⁻¹)
-
--- the inclusion of I into [0,2⁻¹]
-def i₁ : I → I := λ x, ⟨ 2⁻¹ * x.val , half_x_in_I x ⟩
-
--- the inclusion of I into [2⁻¹, 1] 
-def i₂ : I → I := λ x, ⟨ 2⁻¹ * (x.val + 1), half_x_add_one_in_I x ⟩
-
-def i₁_inv (x : I) (hc : x.val ≤ 2⁻¹) : I := ⟨ 2 * x.val, in_I_of_le_half x hc ⟩
-
-def i₂_inv (x : I) (hnc : x.val ≥ 2⁻¹) : I := ⟨ 2 * x.val - 1, in_I_of_ge_half x hnc ⟩
-
-lemma comp_inv₁ (x : I) (hc : x ≤ I_half) : i₁ (i₁_inv x hc) = x := sorry 
-
-lemma inv_comp₁ (x : I) : i₁_inv (i₁ x) (half_x_le_half x) = x := sorry 
-
-lemma comp_inv₂ (x : I) (hnc : x ≥ I_half) : i₂ (i₂_inv x hnc) = x := sorry 
-
-lemma inv_comp₂ (x : I) : i₂_inv (i₂ x) (half_x_add_one_ge_half x) = x := subtype.eq $
-  calc 
-    2 * (i₂ x).val - 1 = 2 * (2⁻¹ * (x + 1)) - 1  : rfl 
-    ...                 = (2 * 2⁻¹) * (x + 1) - 1  : by rw [mul_assoc]
-    ...                 = 1 * (x + 1) - 1          : by rw [mul_inv_cancel (ne_of_gt two_pos)]
-    ...                 = x + 1 - 1                : by rw [one_mul] 
-    ...                 = x + (1 - 1)              : add_assoc x 1 (-1)
-    ...                 = x + 0                    : by rw [sub_self] 
-    ...                 = x                        : add_zero x
-
-end I_lemmas
-
-
-open I_lemmas
-
--- the composition of two paths in X
-def path_comp_map {X : Top} (f g : I → X.α) (x : I) : X.α := 
-if h : x.val ≤ 2⁻¹ then
-  f (i₁_inv x h)
-else
-  let h' := le_of_lt (lt_of_not_ge h) in
-  g (i₂_inv x h')
-
-def val : I → ℝ := subtype.val 
-
 def double : ℝ → ℝ := λ x, 2 * x 
 
 lemma cont1 : continuous double := continuous_mul continuous_const continuous_id
@@ -197,94 +116,83 @@ def double_sub_one : ℝ → ℝ := λ x, 2*x - 1
 
 lemma cont2 : continuous double_sub_one := continuous_sub cont1 continuous_const
 
-lemma I_self_pushout : ∀ {s : set I}, is_open (i₁ ⁻¹' s) → is_open (i₂ ⁻¹' s) → is_open s :=  
-  λ s hs1 hs2,
-  have h₁ : ∃ t₁, is_open t₁ ∧ i₁ ⁻¹' s = val ⁻¹' t₁,
-    from is_open_induced_iff.mp hs1,
-  have h₂ : ∃ t₂, is_open t₂ ∧ i₂ ⁻¹' s = val ⁻¹' t₂,
-    from is_open_induced_iff.mp hs2, 
-  is_open_induced_iff.mpr $
-    exists.elim h₁ $ λ t₁ ht₁, exists.elim h₂ $ λ t₂ ht₂,
-      let t := (double ⁻¹' t₁) ∪ (double_sub_one ⁻¹' t₂) in
-      ⟨t,
-      have hopen : is_open t,
-        from is_open_union (cont1 t₁ ht₁.left) (cont2 t₂ ht₂.left), 
-      have heq : s = val ⁻¹' t,
-        from sorry, 
-      ⟨hopen, heq⟩
-      ⟩
+def s := {x : I | x.val ≤ 2⁻¹}
 
-lemma commutes_1 {X : Top} (f g : I → X.α) (h : f I_1 = g I_0) : path_comp_map f g ∘ i₁ = f := 
-funext $ λ x, 
-  have h₁ : (path_comp_map f g ∘ i₁) x = f (i₁_inv (i₁ x) (half_x_le_half x)), 
-    from dif_pos (half_x_le_half x), 
-  have h₂ : f (i₁_inv (i₁ x) (half_x_le_half x)) = f x,
-    from congr_arg f (inv_comp₁ x),
-  trans h₁ h₂
+instance : decidable_pred s := λ x : I, has_le.le.decidable (x.val) 2⁻¹
 
-lemma foo {x : I} (heq : I_half = i₂ x) : x = I_0 := sorry
+lemma closure1 : closure s = {x : I | x.val ≤ 2⁻¹} := 
+   (closure_le_eq continuous_induced_dom continuous_const)
 
-lemma commutes_2 {X : Top} (f g : I → X.α) (h : f I_1 = g I_0) : path_comp_map f g ∘ i₂ = g := 
-funext $ λ x,
-  have h₁ : i₂ x ≥ I_half,
-    from half_x_add_one_ge_half x,
-  or.elim (eq_or_lt_of_le h₁) 
-    ( λ heq,
-    have heq₁ : i₂ x ≤ I_half, 
-      from le_of_eq (symm heq),
-    have heq₅ : x = I_0 := foo heq,  
-      -- from subtype.eq $ 
-      --   have h₁ : 1 = x.val + 1, begin rw [foo heq], simp, end,
-      --     -- from calc 
-      --     --   (1:ℝ) = 2 * 2⁻¹                   : symm (mul_inv_cancel (ne_of_gt two_pos))
-      --     --   ...   = 2 * (2⁻¹ * (x.val + 1))   : congr_arg (has_mul.mul 2) (subtype.ext.mp heq)
-      --     --   ...   = (2 * 2⁻¹) * (x.val + 1)   : symm (mul_assoc 2 (2⁻¹) (x.val + 1))
-      --     --   ...   = 1 * (x.val + 1)           : by rw [mul_inv_cancel (ne_of_gt two_pos)]
-      --     --   ...   = x.val + 1                 : one_mul (x.val + 1),
-      --   calc 
-      --     x.val = x.val + 0       : symm (add_zero x.val)
-      --     ...   = x.val + (1 - 1) : by rw [sub_self] 
-      --     ...   = x.val + 1 - 1   : symm (add_assoc x.val 1 (-1))
-      --     ...   = 1 - 1           : by rw [←h₁]
-      --     ...   = 0               : sub_self 1,
-    have heq₂ : (path_comp_map f g ∘ i₂) x = f (i₁_inv (i₂ x) heq₁),
-      from dif_pos heq₁,
-    begin
-    rw [heq₂],
-    have heq₃ : 2 * (i₂ x).val = 1,
-      calc 
-        2 * (i₂ x).val = 2 * (I_half).val : by rw [heq] 
-        ...             = 2 * (2⁻¹)        : rfl 
-        ...             = 1                : mul_inv_cancel (ne_of_gt two_pos), 
-    have heq₄ : f (i₁_inv (i₂ x) heq₁) = f I_1, 
-      exact congr_arg f (subtype.eq heq₃),
-    rw [heq₄, heq₅],
-    exact h
-    end )
+lemma closure2 : closure (-s) ⊆ {x : I | x.val ≥ 2⁻¹} :=
+  have h₁ : -s ⊆ {x : I | x.val ≥ 2⁻¹},
+    from assume x hx, 
+    have h₁ : x.val > 2⁻¹,
+      from lt_of_not_ge hx,
+    le_of_lt h₁,
+  have h₂ : is_closed {x : I | x.val ≥ 2⁻¹},
+    from is_closed_le continuous_const continuous_induced_dom,
+  closure_minimal h₁ h₂
 
-    (λ hlt,
-    have hlt₁ : ¬ (i₂ x) ≤ I_half,
-      from not_le_of_gt hlt,
-    have h₂ : (path_comp_map f g ∘ i₂) x = g (i₂_inv (i₂ x) h₁),
-      from dif_neg (not_le_of_gt hlt),
-    have h₄ : g (i₂_inv (i₂ x) h₁) = g x,
-      from congr_arg g (inv_comp₂ x), 
-    trans h₂ h₄
-    )
+def first_half : subtype (closure s) → I := λ x, 
+  have h: x.val ∈ {x : I | x.val ≤ 2⁻¹}, 
+    from (subset.antisymm_iff.mp closure1).left x.property,
+  ⟨ double x.val.val, in_I_of_le_half x.val h ⟩
 
-lemma path_comp_continuous {X : Top} (f g : I → X.α) (hf : continuous f) (hg : continuous g)
-  (h : f I_1 = g I_0) : continuous (path_comp_map f g) := begin
-    intros s hs,
-    have h₁ : is_open (i₁ ⁻¹' (path_comp_map f g ⁻¹' s)), 
-      have h₁₂ : i₁ ⁻¹' (path_comp_map f g ⁻¹' s) = path_comp_map f g ∘ i₁ ⁻¹' s := rfl,
-      rw [h₁₂, commutes_1 f g h], 
-      exact hf s hs,
-    have h₂ : is_open (i₂ ⁻¹' (path_comp_map f g ⁻¹' s)), 
-      have h₂₂ : i₂ ⁻¹' (path_comp_map f g ⁻¹' s) = path_comp_map f g ∘ i₂ ⁻¹' s := rfl,
-      rw [h₂₂, commutes_2 f g h],
-      exact hg s hs,
-    exact I_self_pushout h₁ h₂
+def second_half : subtype (closure (-s)) → I := λ x,
+  have h : x.val ∈ {x : I | x.val ≥ 2⁻¹},
+    from closure2 x.property,
+  ⟨ double_sub_one x.val.val, in_I_of_ge_half x.val h ⟩
+
+lemma cont_first_half : continuous first_half := 
+  continuous_induced_rng $
+  have h : subtype.val ∘ first_half = double ∘ subtype.val ∘ subtype.val, 
+    from rfl,
+  by rw [h]; exact continuous.comp 
+    (continuous.comp continuous_induced_dom continuous_induced_dom) 
+    cont1
+
+lemma cont_second_half : continuous second_half := 
+  continuous_induced_rng $ 
+  have h : subtype.val ∘ second_half = double_sub_one ∘ subtype.val ∘ subtype.val,
+    from rfl, 
+  by rw [h]; exact continuous.comp 
+    (continuous.comp continuous_induced_dom continuous_induced_dom)
+    cont2
+
+def path_comp_map {X : Top} (f g : I → X.α) : I → X.α := pw (f ∘ first_half) (g ∘ second_half)
+
+lemma computation1 {x : I} (h : x.val = 2⁻¹) : double x.val = 1 := by rw [h]; exact mul_inv_cancel (ne_of_gt two_pos) 
+
+lemma computation2 {x : I} (h : x.val = 2⁻¹) : double_sub_one x.val = 0 := by rw [h]; exact
+  have h : (2 : ℝ) * 2⁻¹ = 1 := mul_inv_cancel (ne_of_gt two_pos), 
+  calc 
+    (2 : ℝ) * 2⁻¹ - 1 = 1 - 1  : by rw [h]
+    ...               = 0      : sub_self 1
+
+theorem path_comp_continuous {X : Top} (f g : I → X.α) (hf : continuous f) (hg : continuous g)
+  (h : f I_1 = g I_0) : continuous (path_comp_map f g) := begin 
+    have hp : ∀ x hx, 
+      (f ∘ first_half) ⟨x, frontier_subset_closure hx⟩ = (g ∘ second_half) ⟨x, frontier_subset_closure_compl hx⟩,
+      intros x hx,
+      have h₁ : frontier s ⊆ {x : I | x.val = 2⁻¹},
+        from frontier_le_subset_eq continuous_induced_dom continuous_const,
+      have hf1 : first_half ⟨x, frontier_subset_closure hx⟩ = I_1,
+        have : double x.val = 1,
+          from computation1 (h₁ hx),
+        exact subtype.eq this,
+      have hg0 : second_half ⟨x, frontier_subset_closure_compl hx⟩ = I_0,
+        have : double_sub_one x.val = 0,
+          from computation2 (h₁ hx),
+        exact subtype.eq this,
+      simp [hf1, hg0, h],
+
+    exact continuous_pw (f ∘ first_half) (g ∘ second_half) 
+      hp (continuous.comp cont_first_half hf) (continuous.comp cont_second_half hg),
   end
+
+end path_comp
+
+open path_comp
 
 -- this defines the type of homotopy classes of paths from x to y
 def htpy_class {X : Top} (x y : X.α) := quot (@homotopic X x y) 
@@ -311,6 +219,11 @@ def composition {X : Top} {x y z : paths X} (f : path x y) : htpy_class y z → 
   -- using quot.sound it is enough to have 
   -- h : homotopic (path_composition f a) (homotopic path_composition f b)
   -- TODO ^that
+
+lemma path_comp_associative {X : Top} {x₀ x₁ x₂ x₃ : paths X} (f : path x₀ x₁) (g : path x₁ x₂)
+  (h : path x₂ x₃) : 
+  homotopic (path_composition f (path_composition g h)) (path_composition (path_composition f g) h) := 
+  sorry
 
 instance (X : Top) : category (paths X) := {
   hom      := λ x y, htpy_class x y, 
