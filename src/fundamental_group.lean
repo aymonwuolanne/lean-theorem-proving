@@ -1,6 +1,6 @@
 import topology.continuity
 import category_theory.instances.topological_spaces
-import data.real.basic
+import topology.instances.real
 import category_theory.limits.binary_products
 import category_theory.instances.Top.products
 import piecewise
@@ -19,26 +19,13 @@ local attribute [instance] has_binary_product_of_has_product
 @[reducible] def I := {x : ℝ // 0 ≤ x ∧ x ≤ 1}
 def 𝕀 : Top := { α := I, str := by apply_instance}
 
--- Suggestion from Scott : many of these lemmas are never going to be used twice (e.g. I_contains_0, etc)
--- You can decide whether it helps or hinders readability, but you might consider just inlining them.
-
--- proofs that 0, 1 and 2⁻¹ are contained in I
-lemma I_contains_0 : 0 ≤ (0 : ℝ) ∧ (0 : ℝ) ≤ 1 :=
-  ⟨le_refl 0, le_of_lt zero_lt_one⟩
-lemma I_contains_1 : 0 ≤ (1 : ℝ) ∧ (1 : ℝ) ≤ 1 :=
-  ⟨le_of_lt zero_lt_one, le_refl 1⟩
-
 lemma two_inv_pos : 0 ≤ (2⁻¹ : ℝ) := le_of_lt (inv_pos two_pos)
 lemma two_inv_le_one : (2⁻¹ : ℝ) ≤ 1 := by rw [←one_div_eq_inv]; exact le_of_lt one_half_lt_one
-lemma I_contains_half : 0 ≤ (2⁻¹ : ℝ) ∧ (2⁻¹ : ℝ) ≤ 1 :=
-  ⟨two_inv_pos, two_inv_le_one⟩
 
 -- shorthands for 0, 1 and 2⁻¹ as elements of I
-def I_0    : I := ⟨ 0, I_contains_0 ⟩
-def I_1    : I := ⟨ 1, I_contains_1 ⟩
-def I_half : I := ⟨ 2⁻¹, I_contains_half ⟩
-
-@[simp] lemma I_0_val : I_0.val = 0 := rfl
+def I_0    : I := ⟨ 0, le_refl 0, le_of_lt zero_lt_one ⟩
+def I_1    : I := ⟨ 1, le_of_lt zero_lt_one, le_refl 1 ⟩
+def I_half : I := ⟨ 2⁻¹, two_inv_pos, two_inv_le_one ⟩
 
 -- says that the path has initial point x and final point y
 def path_prop {X : Top} (x y : X.α) (map : 𝕀 ⟶ X) : Prop := map.val I_0 = x ∧ map.val I_1 = y
@@ -55,7 +42,7 @@ def const_map (X Y : Top) (y : Y.α) : X ⟶ Y :=
 --   F(s,0) = f
 --   F(s,1) = g
 --   F(s,t) is a path from x to y for a fixed t
-structure homotopy {X : Top} {x y : X.α} (f g : path x y) :=
+@[class] structure homotopy {X : Top} {x y : X.α} (f g : path x y) :=
   (F : limits.prod 𝕀 𝕀 ⟶ X)
   (left : prod.lift (𝟙 𝕀) (const_map 𝕀 𝕀 I_0) ≫ F = f.map)
   (right : prod.lift (𝟙 𝕀) (const_map 𝕀 𝕀 I_1) ≫ F = g.map)
@@ -164,40 +151,39 @@ lemma cont_second_half : continuous second_half :=
 
 def path_comp_map {X : Top} (f g : I → X.α) : I → X.α := pw (f ∘ first_half) (g ∘ second_half)
 
--- Question from Scott: these lemmas are pretty weird. Can't you just remove the
--- hypothesis `h`, and prove `double 2⁻¹ = 1`?
+lemma computation1 : double 2⁻¹ = 1 := mul_inv_cancel (ne_of_gt two_pos)
 
--- Scott from Scott: `by X; Y` is fine for one-liners. Otherwise, use `begin ... end`
-lemma computation1 {x : I} (h : x.val = 2⁻¹) : double x.val = 1 := by rw [h]; exact mul_inv_cancel (ne_of_gt two_pos)
-
-lemma computation2 {x : I} (h : x.val = 2⁻¹) : double_sub_one x.val = 0 := by rw [h]; exact
+lemma computation2 : double_sub_one 2⁻¹ = 0 :=
   have h : (2 : ℝ) * 2⁻¹ = 1 := mul_inv_cancel (ne_of_gt two_pos),
   calc
     (2 : ℝ) * 2⁻¹ - 1 = 1 - 1  : by rw [h]
     ...               = 0      : sub_self 1
 
-
 -- Formatting suggestion from Scott: put `begin` on a new-line, no indenting
 theorem path_comp_continuous {X : Top} (f g : I → X.α) (hf : continuous f) (hg : continuous g)
-  (h : f I_1 = g I_0) : continuous (path_comp_map f g) := begin
-    have hp : ∀ x hx,
-      (f ∘ first_half) ⟨x, frontier_subset_closure hx⟩ = (g ∘ second_half) ⟨x, frontier_subset_closure_compl hx⟩,
-      intros x hx,
-      have h₁ : frontier s ⊆ {x : I | x.val = 2⁻¹},
-        from frontier_le_subset_eq continuous_induced_dom continuous_const,
-      have hf1 : first_half ⟨x, frontier_subset_closure hx⟩ = I_1,
-        have : double x.val = 1,
-          from computation1 (h₁ hx),
-        exact subtype.eq this,
-      have hg0 : second_half ⟨x, frontier_subset_closure_compl hx⟩ = I_0,
-        have : double_sub_one x.val = 0,
-          from computation2 (h₁ hx),
-        exact subtype.eq this,
-      simp [hf1, hg0, h],
+  (h : f I_1 = g I_0) : continuous (path_comp_map f g) := 
+begin
+  have hp : ∀ x hx,
+    (f ∘ first_half) ⟨x, frontier_subset_closure hx⟩ = (g ∘ second_half) ⟨x, frontier_subset_closure_compl hx⟩,
+    intros x hx,
+    have h₁ : frontier s ⊆ {x : I | x.val = 2⁻¹},
+      from frontier_le_subset_eq continuous_induced_dom continuous_const,
+    have h₂ : x.val = 2⁻¹ := h₁ hx,
+    have hf1 : first_half ⟨x, frontier_subset_closure hx⟩ = I_1,
+      have : double x.val = 1,
+        rw [h₂],
+        exact computation1,
+      exact subtype.eq this,
+    have hg0 : second_half ⟨x, frontier_subset_closure_compl hx⟩ = I_0,
+      have : double_sub_one x.val = 0,
+        rw [h₂],
+        exact computation2,
+      exact subtype.eq this,
+    simp [hf1, hg0, h],
 
-    exact continuous_pw (f ∘ first_half) (g ∘ second_half)
-      hp (continuous.comp cont_first_half hf) (continuous.comp cont_second_half hg),
-  end
+  exact continuous_pw (f ∘ first_half) (g ∘ second_half)
+    hp (continuous.comp cont_first_half hf) (continuous.comp cont_second_half hg),
+end
 
 end path_comp
 
