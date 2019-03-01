@@ -19,16 +19,15 @@ lemma frontier_subset_closure_compl : frontier s ⊆ closure (-s) :=
     from symm frontier_eq_closure_inter_closure,
   h ▸ inter_subset_right (closure s) (closure (-s))
 
-local notation `val1` := @subtype.val α (closure s)
-local notation `val2` := @subtype.val α (closure (-s))
+local notation `val` := @subtype.val _
 
 theorem continuous_pw (hs : ∀ x (h : x ∈ frontier s),
   f ⟨x, frontier_subset_closure h⟩ = g ⟨x, frontier_subset_closure_compl h⟩)
   (hf : continuous f) (hg : continuous g) : (continuous (pw f g)) :=
 continuous_iff_is_closed.mpr $ assume t ht,
-  have h₁ : ∃ t₁, is_closed t₁ ∧ f ⁻¹' t = val1 ⁻¹' t₁,
+  have h₁ : ∃ t₁, is_closed t₁ ∧ f ⁻¹' t = val (closure s) ⁻¹' t₁,
     from is_closed_induced_iff.mp (continuous_iff_is_closed.mp hf t ht),
-  have h₂ : ∃ t₂, is_closed t₂ ∧ g ⁻¹' t = val2 ⁻¹' t₂,
+  have h₂ : ∃ t₂, is_closed t₂ ∧ g ⁻¹' t = val (closure (-s)) ⁻¹' t₂,
     from is_closed_induced_iff.mp (continuous_iff_is_closed.mp hg t ht),
   exists.elim h₁ $
   assume t₁ ht₁,
@@ -41,24 +40,20 @@ continuous_iff_is_closed.mpr $ assume t ht,
     have hxt₁ : Π  hxc : x ∈ closure s, (x ∈ t₁ ↔ f ⟨x, hxc⟩ ∈ t),
       intro hxc,
       let x' : subtype (closure s) := ⟨x, hxc⟩,
-      have h₁ : x ∈ t₁ ↔ val1 x' ∈ t₁,
+      have h₁ : x ∈ t₁ ↔ x' ∈ val (closure s) ⁻¹' t₁,
         refl,
-      have h₂ : val1 x' ∈ t₁ ↔ x' ∈ val1 ⁻¹' t₁,
-        refl,
-      have h₃ : x' ∈ val1 ⁻¹' t₁ ↔ x' ∈ f ⁻¹' t,
+      have h₂ : x' ∈ val (closure s) ⁻¹' t₁ ↔ x' ∈ f ⁻¹' t,
         rw [ht₁.right],
-      rw [h₁, h₂, h₃],
+      rw [h₁, h₂],
       refl,
     have hxt₂ : Π hxi : x ∈ closure (-s), (x ∈ t₂ ↔ g ⟨x, hxi⟩ ∈ t),
       intro hxi,
       let x' : subtype (closure (-s)) := ⟨x, hxi⟩,
-      have h₁ : x ∈ t₂ ↔ val2 x' ∈ t₂,
+      have h₁ : x ∈ t₂ ↔ x' ∈ val (closure (-s)) ⁻¹' t₂,
         refl,
-      have h₂ : val2 x' ∈ t₂ ↔ x' ∈ val2 ⁻¹' t₂,
-        refl,
-      have h₃ : x' ∈ val2 ⁻¹' t₂ ↔ x' ∈ g ⁻¹' t,
+      have h₂ : x' ∈ val (closure (-s)) ⁻¹' t₂ ↔ x' ∈ g ⁻¹' t,
         rw [ht₂.right],
-      rw [h₁, h₂, h₃],
+      rw [h₁, h₂],
       refl,
 
     have hxf : x ∈ frontier s → (x ∈ pw f g ⁻¹' t ↔ x ∈ (closure s ∩ t₁) ∪ (closure (-s) ∩ t₂)),

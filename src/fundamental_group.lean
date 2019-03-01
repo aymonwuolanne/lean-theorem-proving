@@ -41,7 +41,7 @@ def const_map (X Y : Top) (y : Y.α) : X ⟶ Y :=
 -- a homotopy of paths is a map F from I × I → X such that
 --   F(s,0) = f
 --   F(s,1) = g
---   F(s,t) is a path from x to y for a fixed t
+--   F(s,t) is a path from x to y for any fixed t
 @[class] structure homotopy {X : Top} {x y : X.α} (f g : path x y) :=
   (F : limits.prod 𝕀 𝕀 ⟶ X)
   (left : prod.lift (𝟙 𝕀) (const_map 𝕀 𝕀 I_0) ≫ F = f.map)
@@ -57,6 +57,29 @@ namespace homotopic
 -- given a map f this returns the homotopy from f to itself
 def id_htpy {X : Top} (f : 𝕀 ⟶ X) : limits.prod 𝕀 𝕀 ⟶ X := limits.prod.fst 𝕀 𝕀 ≫ f
 
+def reverse : ℝ → ℝ := λ x, 1 - x 
+
+lemma cont_reverse : continuous reverse := continuous_sub continuous_const continuous_id 
+
+lemma reverse_in_I (x : ℝ) (h : 0 ≤ x ∧ x ≤ 1) : 0 ≤ reverse x ∧ reverse x ≤ 1 := begin
+  simp only [reverse],
+  have h₁ : 0 ≤ x := h.left,
+  have h₂ : x ≤ 1 := h.right,
+  apply and.intro,
+  linarith,
+  linarith
+end
+
+def reverseI : I → I := λ x, ⟨reverse x.val, reverse_in_I x.val x.property⟩ 
+
+lemma cont_reverseI : continuous reverseI := continuous_induced_rng $
+  have h : subtype.val ∘ reverseI = reverse ∘ subtype.val,
+    from rfl,
+  have h₂ : continuous (reverse ∘ subtype.val),
+    from continuous.comp continuous_induced_dom cont_reverse,
+  h ▸ h₂
+
+
 @[refl] theorem refl {X : Top} {x y : X.α} (f : path x y) : homotopic f f := ⟨ {
   F      := id_htpy f.map,
   left   := by rw [id_htpy, ←category.assoc]; simp,
@@ -64,7 +87,17 @@ def id_htpy {X : Top} (f : 𝕀 ⟶ X) : limits.prod 𝕀 𝕀 ⟶ X := limits.p
   endpts := λ t, f.property
 } ⟩
 
-@[symm] theorem symm {X : Top} {x y : X.α} (f g : path x y) : homotopic f g → homotopic g f := sorry
+#check @nonempty.rec
+@[symm] theorem symm {X : Top} {x y : X.α} (f g : path x y) : homotopic f g → homotopic g f := 
+  have h : homotopy f g → homotopic g f, 
+    from λ ⟨G, left, right, endpts⟩, ⟨ { 
+      F      := sorry,
+      left   := sorry, 
+      right  := sorry, 
+      endpts := sorry
+    } ⟩,
+  nonempty.rec h
+
 
 @[trans] theorem trans {X : Top} {x y : X.α} (f g h : path x y) : homotopic f g → homotopic g h → homotopic f h :=
 sorry
@@ -80,23 +113,16 @@ lemma in_I_of_le_half (x : I) (h : x.val ≤ 2⁻¹) : 0 ≤ 2 * x.val ∧ 2 * x
   ...       = 1         : mul_inv_cancel (ne_of_gt two_pos) ⟩
 
 lemma in_I_of_ge_half (x : I) (h : x.val ≥ 2⁻¹) :
-  0 ≤ 2 * x.val - 1 ∧ 2 * x.val - 1 ≤ 1 := ⟨
-    have h₁ : 2 * x.val ≥ 2 * 2⁻¹,
-      from mul_le_mul_of_nonneg_left h (le_of_lt two_pos),
-    calc
-      2 * x.val - 1 ≥ 2 * 2⁻¹ - 1   : add_le_add_right' h₁
-      ...           = 1 - 1         : by rw [mul_inv_cancel (ne_of_gt two_pos)]
-      ...           = 0             : sub_self 1,
-    have h₁ : 2 * x.val ≤ 2 * 1,
-      from mul_le_mul_of_nonneg_left (x.property.right) (le_of_lt two_pos),
-    calc
-      2 * x.val - 1 ≤ 2 * 1 - 1 : add_le_add_right' h₁
-      ...           = 2 - 1       : by rw [mul_one]
-      ...           = 1 + 1 - 1   : rfl
-      ...           = 1 + (1-1)   : add_assoc 1 1 (-1)
-      ...           = 1 + 0       : by rw [sub_self]
-      ...           = 1           : add_zero 1
-  ⟩
+  0 ≤ 2 * x.val - 1 ∧ 2 * x.val - 1 ≤ 1 := ⟨ 
+  have h₁ : 2 * x.val ≥ 2 * 2⁻¹, 
+    from mul_le_mul_of_nonneg_left h (le_of_lt two_pos),
+  have h₂ : 2 * x.val ≥ 1, 
+    by rwa [mul_inv_cancel (ne_of_gt two_pos)] at h₁,
+  by linarith, 
+  have h₁ : 2 * x.val ≤ 2*1,
+    from mul_le_mul_of_nonneg_left (x.property.right) (le_of_lt two_pos),
+  by linarith ⟩
+
 
 def double : ℝ → ℝ := λ x, 2 * x
 
@@ -172,12 +198,12 @@ begin
     have hf1 : first_half ⟨x, frontier_subset_closure hx⟩ = I_1,
       have : double x.val = 1,
         rw [h₂],
-        exact computation1,
+        exact mul_inv_cancel (ne_of_gt two_pos),
       exact subtype.eq this,
     have hg0 : second_half ⟨x, frontier_subset_closure_compl hx⟩ = I_0,
       have : double_sub_one x.val = 0,
-        rw [h₂],
-        exact computation2,
+        simp [h₂, double_sub_one, mul_inv_cancel (ne_of_gt two_pos)],
+        ring,
       exact subtype.eq this,
     simp [hf1, hg0, h],
 
