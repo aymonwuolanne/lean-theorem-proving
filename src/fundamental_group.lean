@@ -4,7 +4,6 @@ import topology.instances.real
 import category_theory.limits.binary_products
 import category_theory.instances.Top.products
 import piecewise
-import order_aux
 
 universe u
 noncomputable theory
@@ -19,13 +18,9 @@ local attribute [instance] has_binary_product_of_has_product
 @[reducible] def I := {x : ℝ // 0 ≤ x ∧ x ≤ 1}
 def 𝕀 : Top := { α := I, str := by apply_instance}
 
-lemma two_inv_pos : 0 ≤ (2⁻¹ : ℝ) := le_of_lt (inv_pos two_pos)
-lemma two_inv_le_one : (2⁻¹ : ℝ) ≤ 1 := by rw [←one_div_eq_inv]; exact le_of_lt one_half_lt_one
-
--- shorthands for 0, 1 and 2⁻¹ as elements of I
+-- shorthands for 0 and 1 as elements of I
 def I_0    : I := ⟨ 0, le_refl 0, le_of_lt zero_lt_one ⟩
 def I_1    : I := ⟨ 1, le_of_lt zero_lt_one, le_refl 1 ⟩
-def I_half : I := ⟨ 2⁻¹, two_inv_pos, two_inv_le_one ⟩
 
 -- says that the path has initial point x and final point y
 def path_prop {X : Top} (x y : X.α) (map : 𝕀 ⟶ X) : Prop := map.val I_0 = x ∧ map.val I_1 = y
@@ -42,11 +37,11 @@ def const_map (X Y : Top) (y : Y.α) : X ⟶ Y :=
 --   F(s,0) = f
 --   F(s,1) = g
 --   F(s,t) is a path from x to y for any fixed t
-@[class] structure homotopy {X : Top} {x y : X.α} (f g : path x y) :=
-  (F : limits.prod 𝕀 𝕀 ⟶ X)
-  (left : prod.lift (𝟙 𝕀) (const_map 𝕀 𝕀 I_0) ≫ F = f.map)
-  (right : prod.lift (𝟙 𝕀) (const_map 𝕀 𝕀 I_1) ≫ F = g.map)
-  (endpts : ∀ t : I, path_prop x y (prod.lift (𝟙 𝕀) (const_map 𝕀 𝕀 t) ≫ F))
+structure homotopy {X : Top} {x y : X.α} (f g : path x y) :=
+  (map : limits.prod 𝕀 𝕀 ⟶ X)
+  (left : prod.lift (𝟙 𝕀) (const_map 𝕀 𝕀 I_0) ≫ map = f.map)
+  (right : prod.lift (𝟙 𝕀) (const_map 𝕀 𝕀 I_1) ≫ map = g.map)
+  (endpts : ∀ t : I, path_prop x y (prod.lift (𝟙 𝕀) (const_map 𝕀 𝕀 t) ≫ map))
 
 def homotopic {X : Top} {x y : X.α} (f g : path x y) := nonempty (homotopy f g)
 
@@ -81,17 +76,16 @@ lemma cont_reverseI : continuous reverseI := continuous_induced_rng $
 
 
 @[refl] theorem refl {X : Top} {x y : X.α} (f : path x y) : homotopic f f := ⟨ {
-  F      := id_htpy f.map,
+  map    := id_htpy f.map,
   left   := by rw [id_htpy, ←category.assoc]; simp,
   right  := by rw [id_htpy, ←category.assoc]; simp,
   endpts := λ t, f.property
 } ⟩
 
-#check @nonempty.rec
 @[symm] theorem symm {X : Top} {x y : X.α} (f g : path x y) : homotopic f g → homotopic g f := 
   have h : homotopy f g → homotopic g f, 
     from λ ⟨G, left, right, endpts⟩, ⟨ { 
-      F      := sorry,
+      map    := sorry,
       left   := sorry, 
       right  := sorry, 
       endpts := sorry
